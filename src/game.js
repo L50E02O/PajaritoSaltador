@@ -280,15 +280,15 @@ class Game {
    */
   showChallengeNotification() {
     const messages = [
-      '⚡ ¡Velocidad aumentada!',
-      '🔥 ¡Dificultad extrema!',
-      '💀 ¡Modo infernal activado!',
-      '🚀 ¡Velocidad máxima!',
-      '⚔️ ¡Desafío épico!'
+      '¡Velocidad aumentada!',
+      '¡Dificultad extrema!',
+      '¡Modo infernal activado!',
+      '¡Velocidad máxima!',
+      '¡Desafío épico!'
     ];
     
     const messageIndex = Math.min(this.difficultyLevel - 1, messages.length - 1);
-    const message = messages[messageIndex] || `🎯 Nivel ${this.difficultyLevel} alcanzado!`;
+    const message = messages[messageIndex] || `Nivel ${this.difficultyLevel} alcanzado!`;
     
     const notification = document.getElementById('challengeNotification');
     notification.textContent = message;

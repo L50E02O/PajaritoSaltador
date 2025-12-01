@@ -4,13 +4,13 @@ Juego tipo Flappy Bird desarrollado como PWA (Progressive Web App) completamente
 
 ## Características
 
-- ✅ Juego completamente funcional tipo Flappy Bird
-- ✅ PWA instalable (Android, iOS, Windows, macOS, Linux)
-- ✅ Funciona offline después de la primera carga
-- ✅ Compatible con escritorio, móvil y tablets
-- ✅ Sistema de puntuación y récord guardado en localStorage
-- ✅ Arquitectura modular y escalable
-- ✅ Optimizado para rendimiento
+- Juego completamente funcional tipo Flappy Bird
+- PWA instalable (Android, iOS, Windows, macOS, Linux)
+- Funciona offline después de la primera carga
+- Compatible con escritorio, móvil y tablets
+- Sistema de puntuación y récord guardado en localStorage
+- Arquitectura modular y escalable
+- Optimizado para rendimiento
 
 ## Estructura del Proyecto
 
@@ -197,11 +197,11 @@ El Service Worker (`sw.js`) implementa una estrategia **offline-first**:
 
 ## Compatibilidad
 
-- ✅ Chrome/Edge (Android, Windows, Linux, macOS)
-- ✅ Safari (iOS, macOS)
-- ✅ Firefox (con soporte limitado de PWA)
-- ✅ Dispositivos móviles y tablets
-- ✅ Escritorio
+- Chrome/Edge (Android, Windows, Linux, macOS)
+- Safari (iOS, macOS)
+- Firefox (con soporte limitado de PWA)
+- Dispositivos móviles y tablets
+- Escritorio
 
 ## Solución de Problemas
 
