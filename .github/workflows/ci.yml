@@ -37,9 +37,13 @@ jobs:
             echo "Error: index.html not found in dist"
             exit 1
           fi
-          if [ ! -d "dist/src" ]; then
-            echo "Error: src directory not found in dist"
+          if [ ! -d "dist/assets" ]; then
+            echo "Error: assets directory not found in dist"
             exit 1
           fi
-          echo "✅ Build verification passed!"
+          if [ ! -f "dist/assets/index-*.js" ] && [ -z "$(ls -A dist/assets/*.js 2>/dev/null)" ]; then
+            echo "Error: JavaScript bundle not found in dist/assets"
+            exit 1
+          fi
+          echo "Build verification passed!"
 

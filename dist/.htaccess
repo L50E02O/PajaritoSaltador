@@ -1,0 +1,3 @@
+# Configuración para Apache - Redirigir raíz a index.html
+DirectoryIndex index.html
+
