@@ -31,9 +31,16 @@ class Game {
     this.pipeGap = 150;
     this.pipeSpeed = 150; // píxeles por segundo
     
-    this.gravity = 500;
-    this.jumpForce = 300;
+    this.gravity = 1000;
+    this.jumpForce = 250;
     this.maxVelocity = 400;
+    
+    // Sistema de dificultad progresiva
+    this.baseGravity = 1000;
+    this.baseJumpForce = 250;
+    this.basePipeSpeed = 150;
+    this.basePipeGap = 150;
+    this.difficultyLevel = 0;
     
     this.lastTime = 0;
     this.pipeSpawnTimer = 0;
@@ -86,6 +93,7 @@ class Game {
         this.startGame();
       }
     });
+    
   }
 
   /**
@@ -232,11 +240,64 @@ class Game {
         pipe.passed = true;
         // Solo contar cuando pasan ambos tubos del par
         if (this.pipes.filter(p => p.passed && Math.abs(p.x - pipe.x) < 10).length === 2) {
+          const oldScore = this.score;
           this.score++;
           this.updateScoreDisplay();
+          
+          // Verificar si se alcanzó un nuevo nivel de dificultad (cada 25 puntos)
+          const newLevel = Math.floor(this.score / 25);
+          if (newLevel > this.difficultyLevel) {
+            this.difficultyLevel = newLevel;
+            this.increaseDifficulty();
+          }
         }
       }
     });
+  }
+
+  /**
+   * Aumenta la dificultad del juego
+   */
+  increaseDifficulty() {
+    // Aumentar velocidad de los tubos
+    this.pipeSpeed = this.basePipeSpeed + (this.difficultyLevel * 30);
+    
+    // Reducir el espacio entre tubos
+    this.pipeGap = Math.max(100, this.basePipeGap - (this.difficultyLevel * 10));
+    
+    // Aumentar gravedad ligeramente
+    this.gravity = this.baseGravity + (this.difficultyLevel * 50);
+    
+    // Reducir intervalo de generación de tubos
+    this.pipeSpawnInterval = Math.max(0.8, 1.5 - (this.difficultyLevel * 0.1));
+    
+    // Mostrar notificación
+    this.showChallengeNotification();
+  }
+
+  /**
+   * Muestra una notificación de desafío
+   */
+  showChallengeNotification() {
+    const messages = [
+      '⚡ ¡Velocidad aumentada!',
+      '🔥 ¡Dificultad extrema!',
+      '💀 ¡Modo infernal activado!',
+      '🚀 ¡Velocidad máxima!',
+      '⚔️ ¡Desafío épico!'
+    ];
+    
+    const messageIndex = Math.min(this.difficultyLevel - 1, messages.length - 1);
+    const message = messages[messageIndex] || `🎯 Nivel ${this.difficultyLevel} alcanzado!`;
+    
+    const notification = document.getElementById('challengeNotification');
+    notification.textContent = message;
+    notification.style.display = 'block';
+    
+    // Ocultar después de 2 segundos
+    setTimeout(() => {
+      notification.style.display = 'none';
+    }, 2000);
   }
 
   /**
@@ -248,6 +309,14 @@ class Game {
     this.pipes = [];
     this.pipeSpawnTimer = 0;
     
+    // Resetear dificultad
+    this.difficultyLevel = 0;
+    this.gravity = this.baseGravity;
+    this.jumpForce = this.baseJumpForce;
+    this.pipeSpeed = this.basePipeSpeed;
+    this.pipeGap = this.basePipeGap;
+    this.pipeSpawnInterval = 1.5;
+    
     this.bird.x = 100;
     this.bird.y = 250;
     this.bird.velocity = 0;
@@ -258,6 +327,7 @@ class Game {
     
     document.getElementById('startScreen').style.display = 'none';
     document.getElementById('gameOverScreen').style.display = 'none';
+    document.getElementById('challengeNotification').style.display = 'none';
     this.updateScoreDisplay();
   }
 
