@@ -1,0 +1,24 @@
+{
+  "name": "pajarito-saltador",
+  "version": "1.0.0",
+  "description": "Juego tipo Flappy Bird (Pajarito Saltador) - PWA offline",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "npx http-server . -p 8080 -c-1"
+  },
+  "keywords": [
+    "game",
+    "pwa",
+    "flappy-bird",
+    "offline"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
+

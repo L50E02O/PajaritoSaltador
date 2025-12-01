@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Pajarito Saltador - Juego tipo Flappy Bird, jugable offline">
+    <meta name="theme-color" content="#4a90e2">
+    <title>Pajarito Saltador</title>
+    <link rel="manifest" href="./public/manifest.json">
+    <link rel="icon" type="image/png" href="./public/assets/icon-192.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #gameContainer {
+            position: relative;
+            background: #4a90e2;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        #gameCanvas {
+            display: block;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 50%, #B0E0E6 100%);
+        }
+
+        #ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            color: white;
+            font-weight: bold;
+        }
+
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 32px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #highScore {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 18px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #startScreen, #gameOverScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: all;
+        }
+
+        #startScreen h1, #gameOverScreen h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+        }
+
+        #startScreen p, #gameOverScreen p {
+            font-size: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        #gameOverScreen {
+            display: none;
+        }
+
+        #finalScore {
+            font-size: 36px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 480px) {
+            #startScreen h1, #gameOverScreen h1 {
+                font-size: 36px;
+            }
+            #score {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="ui">
+            <div id="score">0</div>
+            <div id="highScore">Récord: 0</div>
+            <div id="startScreen">
+                <h1>🐦 Pajarito Saltador</h1>
+                <p>Toca, haz clic o presiona ESPACIO para saltar</p>
+                <p>Evita los tubos y consigue la mayor puntuación</p>
+                <button id="startButton">Comenzar</button>
+            </div>
+            <div id="gameOverScreen">
+                <h1>¡Game Over!</h1>
+                <div id="finalScore">Puntuación: 0</div>
+                <button id="restartButton">Jugar de Nuevo</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="./src/game.js"></script>
+</body>
+</html>
+

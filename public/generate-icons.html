@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Generar Iconos PWA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px 5px;
+            cursor: pointer;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Generador de Iconos PWA</h1>
+    <div class="info">
+        <p>Este script genera los iconos necesarios para la PWA.</p>
+        <p>Haz clic en los botones para generar y descargar los iconos.</p>
+        <p>Guarda los archivos descargados en la carpeta <code>public/assets/</code></p>
+    </div>
+    
+    <button onclick="generateIcon(192)">Generar icon-192.png</button>
+    <button onclick="generateIcon(512)">Generar icon-512.png</button>
+    
+    <div id="status"></div>
+
+    <script>
+        function generateIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // Fondo azul
+            ctx.fillStyle = '#4a90e2';
+            ctx.fillRect(0, 0, size, size);
+            
+            // Cuerpo del pajarito (círculo amarillo)
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size/3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Ojo
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(size/2 + size/8, size/2 - size/16, size/20, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Pico
+            ctx.fillStyle = '#FF8C00';
+            ctx.beginPath();
+            ctx.moveTo(size/2 + size/6, size/2);
+            ctx.lineTo(size - size/10, size/2 - size/20);
+            ctx.lineTo(size - size/10, size/2 + size/20);
+            ctx.closePath();
+            ctx.fill();
+            
+            // Alas
+            ctx.fillStyle = '#FFA500';
+            ctx.beginPath();
+            ctx.ellipse(size/2 - size/16, size/2 + size/12, size/8, size/12, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Convertir a blob y descargar
+            canvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-${size}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                document.getElementById('status').innerHTML = 
+                    `<p style="color: green;">✓ Icono icon-${size}.png generado y descargado</p>`;
+            }, 'image/png');
+        }
+    </script>
+</body>
+</html>
+
