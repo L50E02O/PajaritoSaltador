@@ -36,6 +36,48 @@ PajaritoSaltador/
 - Node.js (versión 14 o superior) - Opcional, solo si usas Vite
 - Cualquier servidor HTTP estático
 
+## Despliegue
+
+### Desplegar en Vercel (Recomendado - Sin configuración adicional)
+
+**La forma más simple:** Conectar GitHub directamente con Vercel
+
+1. Sube tu código a GitHub
+2. Ve a [Vercel](https://vercel.com) e inicia sesión con GitHub
+3. Haz clic en "Add New Project"
+4. Selecciona tu repositorio
+5. Vercel detectará automáticamente la configuración de Vite
+6. Haz clic en "Deploy"
+
+**¡Listo!** Cada vez que hagas push a `main` o `master`, Vercel desplegará automáticamente. **No necesitas configurar tokens ni secrets.**
+
+### Opción alternativa: Desde la CLI
+
+```bash
+# Instalar Vercel CLI
+npm i -g vercel
+
+# Desplegar
+vercel
+
+# Para producción
+vercel --prod
+```
+
+### GitHub Actions (Opcional)
+
+El workflow de GitHub Actions (`.github/workflows/deploy.yml`) es **completamente opcional**. Solo úsalo si quieres controlar el deploy desde GitHub Actions en lugar de que Vercel lo haga automáticamente.
+
+Si decides usarlo, necesitas configurar estos secrets en tu repositorio:
+
+1. Ve a Settings → Secrets and variables → Actions
+2. Agrega los siguientes secrets:
+   - `VERCEL_TOKEN`: Tu token de Vercel (obtener en https://vercel.com/account/tokens)
+   - `VERCEL_ORG_ID`: ID de tu organización (encontrado en `.vercel/project.json` después del primer deploy)
+   - `VERCEL_PROJECT_ID`: ID del proyecto (encontrado en `.vercel/project.json`)
+
+**Nota:** Si no configuras estos secrets, el workflow simplemente verificará que el build funcione, pero no desplegará. Vercel seguirá desplegando automáticamente desde su propia integración.
+
 ## Instalación y Ejecución
 
 ### Opción 1: Usando Vite (Recomendado para desarrollo)
@@ -178,6 +220,15 @@ El Service Worker (`sw.js`) implementa una estrategia **offline-first**:
 ### Problemas de rendimiento
 
 - El juego está optimizado, pero en dispositivos muy antiguos puede ser necesario reducir la frecuencia de generación de tubos en `game.js`
+
+## CI/CD
+
+El proyecto incluye workflows de GitHub Actions:
+
+- **CI**: Verifica que el proyecto compile correctamente en cada push y pull request
+- **Deploy**: Despliega automáticamente a Vercel cuando se hace push a `main` o `master`
+
+Los workflows están configurados en `.github/workflows/`
 
 ## Licencia
 
