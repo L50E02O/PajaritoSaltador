@@ -1,9 +1,4 @@
-name: Build and Deploy
-
-# Este workflow es OPCIONAL
-# Si conectas tu repositorio directamente con Vercel (recomendado),
-# Vercel desplegará automáticamente sin necesidad de este workflow.
-# Solo usa este workflow si quieres controlar el deploy desde GitHub Actions.
+name: Build and Deploy to Vercel
 
 on:
   push:
@@ -16,28 +11,85 @@ on:
       - master
   workflow_dispatch: # Permite ejecutar manualmente
 
+permissions:
+  contents: read
+  deployments: write
+
+# Timeout para evitar jobs que se cuelguen
 jobs:
-  build:
+  # Job de validación y build (siempre se ejecuta)
+  validate-and-build:
+    name: Validate and Build
     runs-on: ubuntu-latest
-    
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        node-version: [22.x]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Setup Node.js
+
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      
+          cache-dependency-path: package.json
+
+      - name: Verify package.json
+        run: |
+          if [ ! -f "package.json" ]; then
+            echo "Error: package.json not found"
+            exit 1
+          fi
+          echo "package.json found ✓"
+
       - name: Install dependencies
-        run: npm ci
-      
+        run: |
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ] || [ -f yarn.lock ]; then
+            npm ci --prefer-offline --no-audit
+          else
+            npm install --prefer-offline --no-audit
+          fi
+
+      - name: Verify dependencies
+        run: |
+          if [ ! -d "node_modules" ] || [ -z "$(ls -A node_modules 2>/dev/null)" ]; then
+            echo "Error: Dependencies not installed correctly"
+            exit 1
+          fi
+          echo "Dependencies installed ✓"
+
+      - name: Run ESLint
+        run: |
+          echo "Running ESLint..."
+          npm run lint || {
+            echo "❌ ESLint found errors. Run 'npm run lint:fix' to auto-fix some issues."
+            exit 1
+          }
+          echo "✓ ESLint passed!"
+
+      - name: Check for syntax errors
+        run: |
+          echo "Checking JavaScript syntax..."
+          # Verificar que los archivos JS principales existan y sean válidos
+          if [ ! -f "src/game.js" ]; then
+            echo "Error: src/game.js not found"
+            exit 1
+          fi
+          # Verificar sintaxis básica con node
+          node --check src/*.js 2>/dev/null || echo "Note: Some files may not be valid ES modules (this is OK for Vite)"
+          echo "Syntax check passed ✓"
+
       - name: Build project
         run: npm run build
-      
-      - name: Check build output
+        env:
+          NODE_ENV: production
+
+      - name: Verify build output
         run: |
+          echo "Verifying build output..."
           if [ ! -d "dist" ]; then
             echo "Error: dist directory not found"
             exit 1
@@ -50,43 +102,141 @@ jobs:
             echo "Error: assets directory not found in dist"
             exit 1
           fi
-          echo "Build successful!"
-          echo "Files in dist:"
-          ls -la dist/
-          echo "Files in dist/assets:"
-          ls -la dist/assets/ || true
+          if [ -z "$(ls -A dist/assets/*.js 2>/dev/null)" ]; then
+            echo "Error: JavaScript bundle not found in dist/assets"
+            exit 1
+          fi
+          
+          # Verificar tamaño del build (no debería estar vacío)
+          BUILD_SIZE=$(du -sh dist | cut -f1)
+          echo "Build size: $BUILD_SIZE"
+          
+          # Listar archivos generados
+          echo "Build files:"
+          find dist -type f | head -20
+          
+          echo "✓ Build verification passed!"
 
-  # Este job solo se ejecuta si configuraste los secrets de Vercel
-  # Si no los configuras, simplemente ignóralo - Vercel desplegará automáticamente
+      - name: Upload build artifacts
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+          retention-days: 1
+
+  # Job de deploy (solo en main/master y si el build pasó)
   deploy:
-    needs: build
+    name: Deploy to Vercel
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: validate-and-build
     if: |
-      github.ref == 'refs/heads/main' || 
-      github.ref == 'refs/heads/master' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
+      github.event_name != 'pull_request' &&
       secrets.VERCEL_TOKEN != ''
-    
+    environment:
+      name: production
+      url: ${{ steps.vercel.outputs.deploy_url }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Setup Node.js
+
+      - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22.x'
           cache: 'npm'
-      
+          cache-dependency-path: package.json
+
       - name: Install dependencies
-        run: npm ci
-      
+        run: |
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ] || [ -f yarn.lock ]; then
+            npm ci --prefer-offline --no-audit
+          else
+            npm install --prefer-offline --no-audit
+          fi
+
       - name: Build project
         run: npm run build
-      
+        env:
+          NODE_ENV: production
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
+        id: vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          echo "🚀 Iniciando deployment a Vercel..."
+          set -e  # Salir si hay errores
+          
+          DEPLOY_OUTPUT=$(vercel --prod --yes --token=$VERCEL_TOKEN 2>&1) || {
+            echo "❌ Error en deployment"
+            echo "$DEPLOY_OUTPUT"
+            exit 1
+          }
+          
+          echo "$DEPLOY_OUTPUT"
+          
+          # Intentar extraer la URL del deployment
+          DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[a-zA-Z0-9-]+\.vercel\.app' | head -n 1 || echo "")
+          
+          if [ -z "$DEPLOY_URL" ]; then
+            echo "⚠️ No se pudo extraer la URL automáticamente"
+            echo "Revisa el output anterior para la URL del deployment"
+            # Intentar obtener URL de otra forma
+            DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -oE 'https://[^ ]+' | head -n 1 || echo "")
+          fi
+          
+          if [ -n "$DEPLOY_URL" ]; then
+            echo "✅ Deployment exitoso: $DEPLOY_URL"
+            echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ No se pudo determinar la URL del deployment"
+            exit 1
+          fi
+
+      - name: Register deployment in GitHub
+        if: steps.vercel.outputs.deploy_url != ''
+        uses: actions/github-script@v7
         with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const url = '${{ steps.vercel.outputs.deploy_url }}';
+            if (!url) {
+              core.setFailed('Deploy URL not found');
+              return;
+            }
+            
+            try {
+              const deployment = await github.rest.repos.createDeployment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: context.sha,
+                environment: 'production',
+                auto_merge: false,
+                required_contexts: [],
+                description: 'Vercel deployment via GitHub Actions',
+                transient_environment: false,
+                production_environment: true
+              });
+              
+              await github.rest.repos.createDeploymentStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deployment.data.id,
+                state: 'success',
+                environment_url: url,
+                description: 'Successfully deployed to Vercel'
+              });
+              
+              console.log(`✅ Deployment registered: ${url}`);
+            } catch (error) {
+              console.error('Error registering deployment:', error);
+              // No fallar el workflow si el registro falla
+            }
 

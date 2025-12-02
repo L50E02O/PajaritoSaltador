@@ -12,7 +12,7 @@ class Game {
     this.canvas = document.getElementById('gameCanvas');
     this.renderer = new Renderer(this.canvas);
     this.input = new InputManager();
-    
+
     // Usar el viewport del renderer para las dimensiones del juego
     Object.defineProperty(this, 'gameWidth', {
       get: () => this.renderer.width
@@ -20,11 +20,11 @@ class Game {
     Object.defineProperty(this, 'gameHeight', {
       get: () => this.renderer.height
     });
-    
+
     this.state = 'start'; // 'start', 'playing', 'gameover'
     this.score = 0;
     this.highScore = getHighScore();
-    
+
     this.bird = {
       x: 100,
       y: 250,
@@ -36,27 +36,27 @@ class Game {
       isDying: false, // Estado de animación de muerte
       deathAnimationTime: 0 // Tiempo transcurrido en animación de muerte
     };
-    
+
     this.pipes = [];
     this.pipeWidth = 60;
     this.pipeGap = 150;
     this.pipeSpeed = 150; // píxeles por segundo
-    
+
     this.gravity = 1000;
     this.jumpForce = 250;
     this.maxVelocity = 400;
-    
+
     // Sistema de dificultad progresiva
     this.baseGravity = 1000;
     this.baseJumpForce = 250;
     this.basePipeSpeed = 150;
     this.basePipeGap = 150;
     this.difficultyLevel = 0;
-    
+
     this.lastTime = 0;
     this.pipeSpawnTimer = 0;
     this.pipeSpawnInterval = 1.5; // segundos
-    
+
     // Sistema de habilidades
     this.abilities = {
       invulnerability: {
@@ -77,10 +77,10 @@ class Game {
         key: this.loadSpeedBoostKey() // Cargar tecla guardada o usar 'R' por defecto
       }
     };
-    
+
     // Audio de fondo
     this.backgroundMusic = null;
-    
+
     this.init();
   }
 
@@ -93,10 +93,10 @@ class Game {
       pipe: './assets/pipe.png',
       background: './assets/background.png'
     });
-    
+
     // Inicializar audio de fondo
     this.setupAudio();
-    
+
     this.setupUI();
     this.updateHighScoreDisplay();
     this.startGameLoop();
@@ -112,9 +112,9 @@ class Game {
       // Configurar volumen (0.0 a 1.0)
       this.backgroundMusic.volume = 0.5; // 50% de volumen
       // El loop ya está configurado en el HTML
-      
+
       // Manejar errores de carga de audio
-      this.backgroundMusic.addEventListener('error', (e) => {
+      this.backgroundMusic.addEventListener('error', (_e) => {
         console.warn('No se pudo cargar la música de fondo. Asegúrate de tener un archivo de música en ./assets/music.mp3 o ./assets/music.ogg');
       });
     } else {
@@ -130,15 +130,15 @@ class Game {
       e.stopPropagation();
       this.startGame();
     });
-    
+
     document.getElementById('restartButton').addEventListener('click', (e) => {
       e.stopPropagation();
       this.startGame();
     });
-    
+
     // Botón de habilidad (escudo)
     const abilityButton = document.getElementById('abilityButton');
-    
+
     abilityButton.addEventListener('click', (e) => {
       e.stopPropagation();
       // No activar si está en modo mover
@@ -149,7 +149,7 @@ class Game {
         this.activateInvulnerability();
       }
     });
-    
+
     // Botón de habilidad (velocidad)
     const speedBoostButton = document.getElementById('speedBoostButton');
     if (speedBoostButton) {
@@ -164,7 +164,7 @@ class Game {
         }
       });
     }
-    
+
     // Permitir iniciar el juego con espacio o clic en la pantalla de inicio
     document.getElementById('startScreen').addEventListener('click', (e) => {
       if (e.target.id === 'startScreen' || e.target.id === 'startButton') {
@@ -172,37 +172,37 @@ class Game {
       }
       this.startGame();
     });
-    
+
     // Permitir iniciar con espacio desde la pantalla de inicio
     window.addEventListener('keydown', (e) => {
       if ((e.code === 'Space' || e.key === ' ') && this.state === 'start') {
         e.preventDefault();
         this.startGame();
       }
-      
+
       // Activar habilidades con las teclas configuradas
       if (this.state === 'playing') {
         const invulnKey = this.abilities.invulnerability.key;
         const speedKey = this.abilities.speedBoost.key;
-        
+
         if (e.code === invulnKey || e.key.toLowerCase() === invulnKey.toLowerCase()) {
           e.preventDefault();
           this.activateInvulnerability();
         }
-        
+
         if (e.code === speedKey || e.key.toLowerCase() === speedKey.toLowerCase()) {
           e.preventDefault();
           this.activateSpeedBoost();
         }
       }
     });
-    
+
     // Configuración de teclas
     this.setupKeySettings();
-    
+
     // Configurar movimiento del botón de habilidad
     this.setupAbilityButtonDrag();
-    
+
     // Cargar posición guardada del botón
     this.loadAbilityButtonPosition();
   }
@@ -214,13 +214,13 @@ class Game {
     const gameLoop = (currentTime) => {
       const deltaTime = Math.min((currentTime - this.lastTime) / 1000, 0.1);
       this.lastTime = currentTime;
-      
+
       this.update(deltaTime);
       this.render();
-      
+
       requestAnimationFrame(gameLoop);
     };
-    
+
     requestAnimationFrame(gameLoop);
   }
 
@@ -232,10 +232,10 @@ class Game {
     if (this.state === 'playing') {
       // Verificar y consumir el salto
       const shouldJump = this.input.consumeJump();
-      
+
       // Actualizar habilidades
       this.updateAbilities(deltaTime);
-      
+
       // Actualizar el pájaro
       this.updateBird(deltaTime, shouldJump);
       this.updatePipes(deltaTime);
@@ -253,49 +253,49 @@ class Game {
     // Si está en animación de muerte, manejar caída especial
     if (this.bird.isDying) {
       this.bird.deathAnimationTime += deltaTime;
-      
+
       // Aplicar gravedad aumentada para caída dramática
       Physics.applyGravity(this.bird, this.gravity * 1.5, deltaTime);
       Physics.clampVelocity(this.bird, this.maxVelocity * 1.5);
-      
+
       // Rotación extrema hacia abajo (más dramática)
       const targetRotation = Math.PI; // 180 grados (cabeza abajo)
       this.bird.rotation += (targetRotation - this.bird.rotation) * 0.15;
-      
+
       // Detener animación de alas
       this.bird.wingPhase = 0;
-      
+
       // Si toca el suelo o pasa suficiente tiempo, terminar animación
       if (this.bird.y + this.bird.height >= this.gameHeight || this.bird.deathAnimationTime > 2000) {
         this.bird.y = Math.min(this.bird.y, this.gameHeight - this.bird.height);
         // El gameOver ya fue llamado, solo esperar a que termine la animación
         return;
       }
-      
+
       return;
     }
-    
+
     // Salto
     if (shouldJump) {
       Physics.applyJump(this.bird, this.jumpForce);
       this.bird.wingPhase = 0; // Resetear fase de alas al saltar
     }
-    
+
     // Gravedad
     Physics.applyGravity(this.bird, this.gravity, deltaTime);
     Physics.clampVelocity(this.bird, this.maxVelocity);
-    
+
     // Rotación basada en velocidad (más suave y realista)
     const targetRotation = Math.min(this.bird.velocity * 0.002, Math.PI / 2);
     this.bird.rotation += (targetRotation - this.bird.rotation) * 0.1; // Interpolación suave
-    
+
     // Animación de alas (más rápido cuando sube, más lento cuando baja)
     const wingSpeed = this.bird.velocity < 0 ? 15 : 8; // Más rápido subiendo
     this.bird.wingPhase += deltaTime * wingSpeed;
     if (this.bird.wingPhase > Math.PI * 2) {
       this.bird.wingPhase -= Math.PI * 2;
     }
-    
+
     // Límites del canvas - solo game over si toca el suelo
     if (this.bird.y < 0) {
       this.bird.y = 0;
@@ -318,15 +318,15 @@ class Game {
     if (this.abilities.speedBoost.active) {
       currentSpeed = this.pipeSpeed * this.abilities.speedBoost.speedMultiplier;
     }
-    
+
     // Mover tubos
     this.pipes.forEach(pipe => {
       pipe.x -= currentSpeed * deltaTime;
     });
-    
+
     // Eliminar tubos fuera de pantalla (más estricto para evitar artefactos visuales)
     this.pipes = this.pipes.filter(pipe => pipe.x + pipe.width > -50 && pipe.x < this.gameWidth + 50);
-    
+
     // Generar nuevos tubos
     this.pipeSpawnTimer += deltaTime;
     if (this.pipeSpawnTimer >= this.pipeSpawnInterval) {
@@ -340,7 +340,7 @@ class Game {
    */
   spawnPipe() {
     const gapY = Math.random() * (this.gameHeight - this.pipeGap - 200) + 100;
-    
+
     // Tubo superior
     this.pipes.push({
       x: this.gameWidth,
@@ -349,7 +349,7 @@ class Game {
       height: gapY,
       passed: false
     });
-    
+
     // Tubo inferior
     this.pipes.push({
       x: this.gameWidth,
@@ -368,19 +368,19 @@ class Game {
     if (this.abilities.invulnerability.active) {
       return;
     }
-    
+
     // Si ya está muriendo, no verificar más colisiones
     if (this.bird.isDying) {
       return;
     }
-    
+
     const birdRect = {
       x: this.bird.x,
       y: this.bird.y,
       width: this.bird.width,
       height: this.bird.height
     };
-    
+
     for (const pipe of this.pipes) {
       const pipeRect = {
         x: pipe.x,
@@ -388,7 +388,7 @@ class Game {
         width: pipe.width,
         height: pipe.height
       };
-      
+
       if (checkCollision(birdRect, pipeRect)) {
         this.startDeathAnimation();
         this.gameOver();
@@ -401,8 +401,10 @@ class Game {
    * Inicia la animación de muerte del pájaro
    */
   startDeathAnimation() {
-    if (this.bird.isDying) return; // Ya está muriendo
-    
+    if (this.bird.isDying) {
+      return;
+    } // Ya está muriendo
+
     this.bird.isDying = true;
     this.bird.deathAnimationTime = 0;
     // Aumentar velocidad hacia abajo para efecto dramático
@@ -416,14 +418,14 @@ class Game {
   updateAbilities(deltaTime) {
     // Actualizar invulnerabilidad
     const invulnAbility = this.abilities.invulnerability;
-    
+
     if (invulnAbility.cooldownTimer > 0) {
       invulnAbility.cooldownTimer -= deltaTime;
       if (invulnAbility.cooldownTimer < 0) {
         invulnAbility.cooldownTimer = 0;
       }
     }
-    
+
     if (invulnAbility.active) {
       invulnAbility.activeTimer -= deltaTime;
       if (invulnAbility.activeTimer <= 0) {
@@ -431,17 +433,17 @@ class Game {
         invulnAbility.activeTimer = 0;
       }
     }
-    
+
     // Actualizar velocidad
     const speedAbility = this.abilities.speedBoost;
-    
+
     if (speedAbility.cooldownTimer > 0) {
       speedAbility.cooldownTimer -= deltaTime;
       if (speedAbility.cooldownTimer < 0) {
         speedAbility.cooldownTimer = 0;
       }
     }
-    
+
     if (speedAbility.active) {
       speedAbility.activeTimer -= deltaTime;
       if (speedAbility.activeTimer <= 0) {
@@ -449,7 +451,7 @@ class Game {
         speedAbility.activeTimer = 0;
       }
     }
-    
+
     // Actualizar UI
     this.updateAbilityUI();
     this.updateSpeedBoostUI();
@@ -460,17 +462,17 @@ class Game {
    */
   activateInvulnerability() {
     const ability = this.abilities.invulnerability;
-    
+
     // Verificar si está en cooldown
     if (ability.cooldownTimer > 0) {
       return false;
     }
-    
+
     // Activar habilidad
     ability.active = true;
     ability.activeTimer = ability.duration;
     ability.cooldownTimer = ability.cooldown;
-    
+
     this.updateAbilityUI();
     return true;
   }
@@ -480,17 +482,17 @@ class Game {
    */
   activateSpeedBoost() {
     const ability = this.abilities.speedBoost;
-    
+
     // Verificar si está en cooldown
     if (ability.cooldownTimer > 0) {
       return false;
     }
-    
+
     // Activar habilidad
     ability.active = true;
     ability.activeTimer = ability.duration;
     ability.cooldownTimer = ability.cooldown;
-    
+
     this.updateSpeedBoostUI();
     return true;
   }
@@ -502,20 +504,20 @@ class Game {
     const ability = this.abilities.invulnerability;
     const abilityButton = document.getElementById('abilityButton');
     const abilityCooldown = document.getElementById('abilityCooldown');
-    
+
     if (!abilityButton) {
       console.warn('abilityButton no encontrado');
       return;
     }
-    
+
     if (!abilityCooldown) {
       console.warn('abilityCooldown no encontrado');
       return;
     }
-    
+
     // Limpiar clases anteriores
     abilityButton.classList.remove('active', 'cooldown');
-    
+
     if (ability.active) {
       abilityButton.classList.add('active');
       abilityButton.textContent = 'Escudo Activo';
@@ -545,18 +547,18 @@ class Game {
     const ability = this.abilities.speedBoost;
     const speedBoostButton = document.getElementById('speedBoostButton');
     const speedBoostCooldown = document.getElementById('speedBoostCooldown');
-    
+
     if (!speedBoostButton) {
       return; // Botón no existe aún, no es error
     }
-    
+
     if (!speedBoostCooldown) {
       return;
     }
-    
+
     // Limpiar clases anteriores
     speedBoostButton.classList.remove('active', 'cooldown');
-    
+
     if (ability.active) {
       speedBoostButton.classList.add('active');
       speedBoostButton.textContent = 'Velocidad Activa';
@@ -691,34 +693,38 @@ class Game {
     const settingsPanel = document.getElementById('settingsPanel');
     const closeSettings = document.getElementById('closeSettings');
     const abilityKeyInput = document.getElementById('abilityKeyInput');
-    
-    if (!settingsButton || !settingsPanel || !abilityKeyInput) return;
-    
+
+    if (!settingsButton || !settingsPanel || !abilityKeyInput) {
+      return;
+    }
+
     // Mostrar/ocultar panel
     settingsButton.addEventListener('click', (e) => {
       e.stopPropagation();
       settingsPanel.classList.toggle('visible');
     });
-    
+
     closeSettings.addEventListener('click', (e) => {
       e.stopPropagation();
       settingsPanel.classList.remove('visible');
     });
-    
+
     // Configurar input de tecla
     let waitingForKey = false;
-    
+
     abilityKeyInput.addEventListener('click', () => {
-      if (waitingForKey) return;
-      
+      if (waitingForKey) {
+        return;
+      }
+
       waitingForKey = true;
       abilityKeyInput.classList.add('waiting');
       abilityKeyInput.textContent = 'Presiona una tecla...';
-      
+
       const keyHandler = (e) => {
         e.preventDefault();
         e.stopPropagation();
-        
+
         // Ignorar teclas especiales que no queremos
         if (e.code === 'Escape' || e.code === 'Tab' || e.code === 'Space') {
           waitingForKey = false;
@@ -730,22 +736,22 @@ class Game {
           }
           return;
         }
-        
+
         // Guardar la nueva tecla
         this.saveAbilityKey(e.code);
         abilityKeyInput.textContent = this.getKeyDisplayName(e.code);
         abilityKeyInput.classList.remove('waiting');
-        
+
         waitingForKey = false;
         window.removeEventListener('keydown', keyHandler);
       };
-      
+
       window.addEventListener('keydown', keyHandler, { once: true });
     });
-    
+
     // Inicializar display
     abilityKeyInput.textContent = this.getKeyDisplayName(this.abilities.invulnerability.key);
-    
+
     // Configurar toggle para mover botón
     const moveButtonToggle = document.getElementById('moveButtonToggle');
     if (moveButtonToggle) {
@@ -754,10 +760,10 @@ class Game {
         this.setMoveMode(isActive);
       });
     }
-    
+
     // Configurar modal de ayuda
     this.setupHelpModal();
-    
+
     // Configurar botón de limpiar datos
     this.setupClearDataButton();
   }
@@ -767,11 +773,13 @@ class Game {
    */
   setupClearDataButton() {
     const clearDataButton = document.getElementById('clearDataButton');
-    if (!clearDataButton) return;
-    
+    if (!clearDataButton) {
+      return;
+    }
+
     clearDataButton.addEventListener('click', async (e) => {
       e.stopPropagation();
-      
+
       // Confirmar acción
       const confirmed = confirm(
         '¿Estás seguro de que quieres limpiar todos los datos del sitio?\n\n' +
@@ -782,20 +790,22 @@ class Game {
         '• Todos los datos de almacenamiento\n\n' +
         'La página se refrescará automáticamente.'
       );
-      
-      if (!confirmed) return;
-      
+
+      if (!confirmed) {
+        return;
+      }
+
       // Mostrar mensaje de carga
       clearDataButton.textContent = 'Limpiando...';
       clearDataButton.disabled = true;
-      
+
       try {
         // Limpiar localStorage
         localStorage.clear();
-        
+
         // Limpiar sessionStorage
         sessionStorage.clear();
-        
+
         // Desregistrar Service Workers
         if ('serviceWorker' in navigator) {
           const registrations = await navigator.serviceWorker.getRegistrations();
@@ -803,7 +813,7 @@ class Game {
             await registration.unregister();
           }
         }
-        
+
         // Limpiar Cache Storage
         if ('caches' in window) {
           const cacheNames = await caches.keys();
@@ -811,7 +821,7 @@ class Game {
             cacheNames.map(cacheName => caches.delete(cacheName))
           );
         }
-        
+
         // Limpiar IndexedDB (si existe)
         if ('indexedDB' in window) {
           try {
@@ -830,13 +840,13 @@ class Game {
             console.warn('Error al limpiar IndexedDB:', error);
           }
         }
-        
+
         // Esperar un momento para asegurar que todo se limpió
         await new Promise(resolve => setTimeout(resolve, 500));
-        
+
         // Refrescar la página
         window.location.reload();
-        
+
       } catch (error) {
         console.error('Error al limpiar datos:', error);
         alert('Hubo un error al limpiar los datos. Intenta refrescar la página manualmente.');
@@ -854,27 +864,29 @@ class Game {
     const helpModal = document.getElementById('helpModal');
     const closeHelp = document.getElementById('closeHelp');
     const keysGrid = document.getElementById('keysGrid');
-    
-    if (!helpButton || !helpModal || !closeHelp || !keysGrid) return;
-    
+
+    if (!helpButton || !helpModal || !closeHelp || !keysGrid) {
+      return;
+    }
+
     // Mostrar modal
     helpButton.addEventListener('click', (e) => {
       e.stopPropagation();
       this.updateHelpModal();
       helpModal.classList.add('visible');
     });
-    
+
     // Cerrar modal
     closeHelp.addEventListener('click', () => {
       helpModal.classList.remove('visible');
     });
-    
+
     helpModal.addEventListener('click', (e) => {
       if (e.target === helpModal) {
         helpModal.classList.remove('visible');
       }
     });
-    
+
     // Cerrar con Escape
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Escape' && helpModal.classList.contains('visible')) {
@@ -888,12 +900,14 @@ class Game {
    */
   updateHelpModal() {
     const keysGrid = document.getElementById('keysGrid');
-    if (!keysGrid) return;
-    
+    if (!keysGrid) {
+      return;
+    }
+
     keysGrid.innerHTML = '';
     const availableKeys = this.getAvailableKeys();
     const currentKey = this.abilities.invulnerability.key;
-    
+
     availableKeys.forEach(key => {
       const keyItem = document.createElement('div');
       keyItem.className = 'key-item';
@@ -914,10 +928,9 @@ class Game {
         pipe.passed = true;
         // Solo contar cuando pasan ambos tubos del par
         if (this.pipes.filter(p => p.passed && Math.abs(p.x - pipe.x) < 10).length === 2) {
-          const oldScore = this.score;
           this.score++;
           this.updateScoreDisplay();
-          
+
           // Verificar si se alcanzó un nuevo nivel de dificultad (cada 25 puntos)
           const newLevel = Math.floor(this.score / 25);
           if (newLevel > this.difficultyLevel) {
@@ -935,16 +948,16 @@ class Game {
   increaseDifficulty() {
     // Aumentar velocidad de los tubos
     this.pipeSpeed = this.basePipeSpeed + (this.difficultyLevel * 30);
-    
+
     // Reducir el espacio entre tubos
     this.pipeGap = Math.max(100, this.basePipeGap - (this.difficultyLevel * 10));
-    
+
     // Aumentar gravedad ligeramente
     this.gravity = this.baseGravity + (this.difficultyLevel * 50);
-    
+
     // Reducir intervalo de generación de tubos
     this.pipeSpawnInterval = Math.max(0.8, 1.5 - (this.difficultyLevel * 0.1));
-    
+
     // Mostrar notificación
     this.showChallengeNotification();
   }
@@ -960,14 +973,14 @@ class Game {
       '¡Velocidad máxima!',
       '¡Desafío épico!'
     ];
-    
+
     const messageIndex = Math.min(this.difficultyLevel - 1, messages.length - 1);
     const message = messages[messageIndex] || `Nivel ${this.difficultyLevel} alcanzado!`;
-    
+
     const notification = document.getElementById('challengeNotification');
     notification.textContent = message;
     notification.style.display = 'block';
-    
+
     // Ocultar después de 2 segundos
     setTimeout(() => {
       notification.style.display = 'none';
@@ -982,7 +995,7 @@ class Game {
     this.score = 0;
     this.pipes = [];
     this.pipeSpawnTimer = 0;
-    
+
     // Resetear dificultad
     this.difficultyLevel = 0;
     this.gravity = this.baseGravity;
@@ -990,16 +1003,16 @@ class Game {
     this.pipeSpeed = this.basePipeSpeed;
     this.pipeGap = this.basePipeGap;
     this.pipeSpawnInterval = 1.5;
-    
+
     // Resetear habilidades
     this.abilities.invulnerability.active = false;
     this.abilities.invulnerability.activeTimer = 0;
     this.abilities.invulnerability.cooldownTimer = 0;
-    
+
     this.abilities.speedBoost.active = false;
     this.abilities.speedBoost.activeTimer = 0;
     this.abilities.speedBoost.cooldownTimer = 0;
-    
+
     this.bird.x = 100;
     this.bird.y = 250;
     this.bird.velocity = 0;
@@ -1007,31 +1020,31 @@ class Game {
     this.bird.wingPhase = 0;
     this.bird.isDying = false;
     this.bird.deathAnimationTime = 0;
-    
+
     this.input.reset();
     this.input.setEnabled(true); // Habilitar input cuando empieza el juego
-    
+
     document.getElementById('startScreen').style.display = 'none';
     document.getElementById('gameOverScreen').style.display = 'none';
     document.getElementById('challengeNotification').style.display = 'none';
-    
+
     // Mostrar contenedores de habilidades
     const abilityContainer = document.getElementById('abilityContainer');
     if (abilityContainer) {
       abilityContainer.style.display = 'flex';
     }
-    
+
     const speedBoostContainer = document.getElementById('speedBoostContainer');
     if (speedBoostContainer) {
       speedBoostContainer.style.display = 'flex';
     }
-    
+
     this.updateScoreDisplay();
-    
+
     // Inicializar UI de habilidades
     this.updateAbilityUI();
     this.updateSpeedBoostUI();
-    
+
     // Reproducir música de fondo
     this.playBackgroundMusic();
   }
@@ -1043,12 +1056,12 @@ class Game {
     if (this.backgroundMusic) {
       // Intentar reproducir (puede fallar si el navegador requiere interacción del usuario)
       const playPromise = this.backgroundMusic.play();
-      
+
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
             // Música reproducida exitosamente
-            console.log('Música de fondo iniciada');
+            // Música iniciada correctamente
           })
           .catch((error) => {
             // Autoplay bloqueado o error de reproducción
@@ -1073,21 +1086,23 @@ class Game {
    * Termina el juego
    */
   gameOver() {
-    if (this.state === 'gameover') return; // Evitar múltiples game over
-    
+    if (this.state === 'gameover') {
+      return;
+    } // Evitar múltiples game over
+
     this.state = 'gameover';
     this.input.setEnabled(false); // Deshabilitar input cuando termina el juego
-    
+
     // Detener música de fondo
     this.stopBackgroundMusic();
-    
+
     // Actualizar récord
     if (this.score > this.highScore) {
       this.highScore = this.score;
       setHighScore(this.highScore);
       this.updateHighScoreDisplay();
     }
-    
+
     document.getElementById('finalScore').textContent = `Puntuación: ${this.score}`;
     document.getElementById('gameOverScreen').style.display = 'flex';
   }
@@ -1098,7 +1113,7 @@ class Game {
   render() {
     this.renderer.clear();
     this.renderer.drawBackground();
-    
+
     if (this.state === 'playing' || this.state === 'gameover') {
       this.renderer.drawPipes(this.pipes, this.abilities.speedBoost.active);
       this.renderer.drawBird(this.bird, this.abilities.invulnerability.active);
@@ -1125,24 +1140,26 @@ class Game {
   setupAbilityButtonDrag() {
     const abilityContainer = document.getElementById('abilityContainer');
     const abilityButton = document.getElementById('abilityButton');
-    
-    if (!abilityContainer || !abilityButton) return;
-    
+
+    if (!abilityContainer || !abilityButton) {
+      return;
+    }
+
     let isDragging = false;
     let startX = 0;
     let startY = 0;
     let initialX = 0;
     let initialY = 0;
     let moveMode = false;
-    
+
     // Función para obtener posición desde estilo
     const getPosition = (element) => {
       const style = window.getComputedStyle(element);
       const left = parseFloat(style.left) || 0;
       const bottom = parseFloat(style.bottom) || 0;
       const top = parseFloat(style.top) || 0;
-      const right = parseFloat(style.right) || 0;
-      
+      const _right = parseFloat(style.right) || 0;
+
       // Convertir a coordenadas absolutas
       if (style.bottom !== 'auto') {
         return { x: left, y: window.innerHeight - bottom - element.offsetHeight };
@@ -1150,88 +1167,94 @@ class Game {
         return { x: left, y: top };
       }
     };
-    
+
     // Función para establecer posición
     const setPosition = (element, x, y) => {
       // Mantener dentro de los límites de la pantalla
       const maxX = window.innerWidth - element.offsetWidth;
       const maxY = window.innerHeight - element.offsetHeight;
-      
+
       x = Math.max(0, Math.min(x, maxX));
       y = Math.max(0, Math.min(y, maxY));
-      
+
       element.style.left = `${x}px`;
       element.style.top = `${y}px`;
       element.style.bottom = 'auto';
       element.style.right = 'auto';
     };
-    
+
     // Iniciar arrastre
     const startDrag = (e) => {
-      if (!moveMode) return;
-      
+      if (!moveMode) {
+        return;
+      }
+
       e.preventDefault();
       e.stopPropagation();
-      
+
       // Prevenir activación de habilidad durante arrastre
       abilityButton.style.pointerEvents = 'none';
-      
+
       isDragging = true;
       abilityContainer.classList.add('dragging');
-      
+
       const pos = getPosition(abilityContainer);
       initialX = pos.x;
       initialY = pos.y;
-      
+
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      
+
       startX = clientX - initialX;
       startY = clientY - initialY;
     };
-    
+
     // Mover durante el arrastre
     const drag = (e) => {
-      if (!isDragging || !moveMode) return;
-      
+      if (!isDragging || !moveMode) {
+        return;
+      }
+
       e.preventDefault();
-      
+
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      
+
       const newX = clientX - startX;
       const newY = clientY - startY;
-      
+
       setPosition(abilityContainer, newX, newY);
     };
-    
+
     // Finalizar arrastre
     const stopDrag = () => {
-      if (!isDragging) return;
-      
+      if (!isDragging) {
+        return;
+      }
+
       isDragging = false;
       abilityContainer.classList.remove('dragging');
-      
+
       // Restaurar eventos del botón
       setTimeout(() => {
         abilityButton.style.pointerEvents = '';
       }, 100);
-      
+
       // Guardar posición
       const pos = getPosition(abilityContainer);
       this.saveAbilityButtonPosition(pos.x, pos.y);
     };
-    
+
     // Event listeners para mouse
     abilityButton.addEventListener('mousedown', startDrag);
     document.addEventListener('mousemove', drag);
     document.addEventListener('mouseup', stopDrag);
-    
+
     // Event listeners para touch
     abilityButton.addEventListener('touchstart', startDrag, { passive: false });
     document.addEventListener('touchmove', drag, { passive: false });
     document.addEventListener('touchend', stopDrag);
-    
+
     // Guardar referencia para setMoveMode
     this._abilityButtonDrag = {
       setMoveMode: (enabled) => {
@@ -1262,8 +1285,10 @@ class Game {
    */
   loadAbilityButtonPosition() {
     const abilityContainer = document.getElementById('abilityContainer');
-    if (!abilityContainer) return;
-    
+    if (!abilityContainer) {
+      return;
+    }
+
     const saved = localStorage.getItem('abilityButtonPosition');
     if (saved) {
       try {
@@ -1293,7 +1318,10 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js', { scope: '/' })
       .then((registration) => {
-        console.log('Service Worker registrado:', registration);
+        // Service Worker registrado correctamente
+        if (registration) {
+          // Registro exitoso
+        }
       })
       .catch((error) => {
         console.error('Error registrando Service Worker:', error);

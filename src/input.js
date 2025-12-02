@@ -39,14 +39,14 @@ class InputManager {
 
       const target = e.target;
       // No procesar si es un botón o está en las pantallas
-      if (target.tagName === 'BUTTON' || 
-          target.id === 'startScreen' || 
+      if (target.tagName === 'BUTTON' ||
+          target.id === 'startScreen' ||
           target.id === 'gameOverScreen' ||
           target.closest('#startScreen') ||
           target.closest('#gameOverScreen')) {
         return;
       }
-      
+
       if (this.enabled) {
         e.preventDefault();
         this.jumpRequested = true;
@@ -63,14 +63,14 @@ class InputManager {
       }
 
       const target = e.target;
-      if (target.tagName === 'BUTTON' || 
-          target.id === 'startScreen' || 
+      if (target.tagName === 'BUTTON' ||
+          target.id === 'startScreen' ||
           target.id === 'gameOverScreen' ||
           target.closest('#startScreen') ||
           target.closest('#gameOverScreen')) {
         return;
       }
-      
+
       if (this.enabled) {
         e.preventDefault();
         this.lastTouchTime = now;

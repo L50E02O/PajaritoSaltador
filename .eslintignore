@@ -1,0 +1,17 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Config files
+*.config.js
+vite.config.js
+
+# Service worker (generated)
+public/sw.js
+
+# Generated files
+*.min.js
+

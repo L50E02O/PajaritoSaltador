@@ -14,19 +14,37 @@ on:
 jobs:
   lint-and-build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22.x]
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       
-      - name: Setup Node.js
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: ${{ matrix.node-version }}
           cache: 'npm'
+          cache-dependency-path: package.json
       
       - name: Install dependencies
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ] || [ -f npm-shrinkwrap.json ] || [ -f yarn.lock ]; then
+            npm ci
+          else
+            npm install
+          fi
+      
+      - name: Run ESLint
+        run: |
+          echo "Running ESLint..."
+          npm run lint || {
+            echo "❌ ESLint found errors. Run 'npm run lint:fix' to auto-fix some issues."
+            exit 1
+          }
+          echo "✓ ESLint passed!"
       
       - name: Build project
         run: npm run build
@@ -41,7 +59,7 @@ jobs:
             echo "Error: assets directory not found in dist"
             exit 1
           fi
-          if [ ! -f "dist/assets/index-*.js" ] && [ -z "$(ls -A dist/assets/*.js 2>/dev/null)" ]; then
+          if [ -z "$(ls -A dist/assets/*.js 2>/dev/null)" ]; then
             echo "Error: JavaScript bundle not found in dist/assets"
             exit 1
           fi

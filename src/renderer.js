@@ -7,24 +7,24 @@ class Renderer {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
     this.assets = {};
-    
+
     // Viewport virtual para la lógica del juego (aspect ratio 2:3)
     this.viewport = {
       width: 400,
       height: 600
     };
-    
+
     this.setupCanvas();
     this.setupResizeListener();
   }
-  
+
   /**
    * Obtiene el ancho del viewport virtual (para la lógica del juego)
    */
   get width() {
     return this.viewport.width;
   }
-  
+
   /**
    * Obtiene el alto del viewport virtual (para la lógica del juego)
    */
@@ -40,26 +40,24 @@ class Renderer {
     const dpr = window.devicePixelRatio || 1;
     const displayWidth = window.innerWidth;
     const displayHeight = window.innerHeight;
-    
+
     // Tamaño del viewport virtual (lógica del juego)
     const viewportWidth = this.viewport.width;
     const viewportHeight = this.viewport.height;
-    const viewportAspect = viewportWidth / viewportHeight;
-    const screenAspect = displayWidth / displayHeight;
-    
+
     // Calcular escalado para mantener aspect ratio (contain mode)
     const scaleX = displayWidth / viewportWidth;
     const scaleY = displayHeight / viewportHeight;
     const scale = Math.min(scaleX, scaleY);
-    
+
     // Calcular dimensiones del canvas real (con DPR para alta resolución)
     const canvasWidth = displayWidth * dpr;
     const canvasHeight = displayHeight * dpr;
-    
+
     // Establecer tamaño real del canvas (en píxeles)
     this.canvas.width = canvasWidth;
     this.canvas.height = canvasHeight;
-    
+
     // Establecer tamaño visual del canvas (en CSS pixels)
     this.canvas.style.width = `${displayWidth}px`;
     this.canvas.style.height = `${displayHeight}px`;
@@ -69,7 +67,7 @@ class Renderer {
     this.canvas.style.left = '0';
     this.canvas.style.margin = '0';
     this.canvas.style.transform = 'none';
-    
+
     // Escalar el contexto para que el viewport virtual se ajuste al canvas real
     this.setupCanvasTransform(scale, displayWidth, displayHeight, viewportWidth, viewportHeight);
   }
@@ -92,7 +90,7 @@ class Renderer {
    * @param {Object} assetPaths - Objeto con rutas de assets {bird, pipe, background}
    * @returns {Promise} - Promesa que resuelve cuando todos los assets están cargados
    */
-  async loadAssets(assetPaths) {
+  async loadAssets(_assetPaths) {
     try {
       // Si no hay imágenes, usar formas geométricas
       this.assets.bird = await this.createBirdShape();
@@ -190,7 +188,6 @@ class Renderer {
     // Limpiar toda el área del canvas
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     // Restaurar el escalado después de limpiar
-    const dpr = window.devicePixelRatio || 1;
     const displayWidth = window.innerWidth;
     const displayHeight = window.innerHeight;
     const viewportWidth = this.viewport.width;
@@ -211,21 +208,21 @@ class Renderer {
    */
   setupCanvasTransform(scale, displayWidth, displayHeight, viewportWidth, viewportHeight) {
     const dpr = window.devicePixelRatio || 1;
-    
+
     // Calcular dimensiones escaladas del viewport
     const scaledWidth = viewportWidth * scale;
     const scaledHeight = viewportHeight * scale;
-    
+
     // Calcular offset para centrar el viewport en el canvas
     const offsetX = (displayWidth - scaledWidth) / 2;
     const offsetY = (displayHeight - scaledHeight) / 2;
-    
+
     // Resetear transformación
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-    
+
     // Escalar por DPR primero
     this.ctx.scale(dpr, dpr);
-    
+
     // Aplicar offset y escalado del viewport
     this.ctx.translate(offsetX, offsetY);
     this.ctx.scale(scale, scale);
@@ -270,10 +267,10 @@ class Renderer {
    */
   drawBird(bird, invulnerable = false) {
     this.ctx.save();
-    
+
     this.ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
     this.ctx.rotate(bird.rotation || 0);
-    
+
     // Efectos visuales de muerte
     if (bird.isDying) {
       // Parpadeo rojo durante la caída
@@ -286,7 +283,7 @@ class Renderer {
         this.ctx.fillRect(-bird.width / 2 - 5, -bird.height / 2 - 5, bird.width + 10, bird.height + 10);
         this.ctx.globalAlpha = 1;
       }
-      
+
       // Partículas de "choque" (círculos pequeños alrededor)
       if (bird.deathAnimationTime < 300) {
         const particleCount = 8;
@@ -295,7 +292,7 @@ class Renderer {
           const distance = 15 + (bird.deathAnimationTime / 300) * 10;
           const x = Math.cos(angle) * distance;
           const y = Math.sin(angle) * distance;
-          
+
           this.ctx.fillStyle = `rgba(255, 100, 0, ${1 - bird.deathAnimationTime / 300})`;
           this.ctx.beginPath();
           this.ctx.arc(x, y, 3, 0, Math.PI * 2);
@@ -303,7 +300,7 @@ class Renderer {
         }
       }
     }
-    
+
     // Escudo dorado cuando está invulnerable (dibujar primero para que esté detrás)
     if (invulnerable && !bird.isDying) {
       // Círculo exterior brillante
@@ -311,12 +308,12 @@ class Renderer {
       gradient.addColorStop(0, 'rgba(255, 215, 0, 0.8)');
       gradient.addColorStop(0.5, 'rgba(255, 215, 0, 0.4)');
       gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
-      
+
       this.ctx.fillStyle = gradient;
       this.ctx.beginPath();
       this.ctx.arc(0, 0, bird.width / 2 + 15, 0, Math.PI * 2);
       this.ctx.fill();
-      
+
       // Borde dorado brillante
       this.ctx.strokeStyle = '#FFD700';
       this.ctx.lineWidth = 4;
@@ -325,7 +322,7 @@ class Renderer {
       this.ctx.beginPath();
       this.ctx.arc(0, 0, bird.width / 2 + 10, 0, Math.PI * 2);
       this.ctx.stroke();
-      
+
       // Segundo círculo interno
       this.ctx.strokeStyle = '#FFA500';
       this.ctx.lineWidth = 2;
@@ -333,14 +330,14 @@ class Renderer {
       this.ctx.beginPath();
       this.ctx.arc(0, 0, bird.width / 2 + 5, 0, Math.PI * 2);
       this.ctx.stroke();
-      
+
       // Resetear sombra
       this.ctx.shadowBlur = 0;
     }
-    
+
     // Dibujar el pájaro con animación de alas (o sin alas si está muriendo)
     this.drawAnimatedBird(bird);
-    
+
     this.ctx.restore();
   }
 
@@ -350,19 +347,19 @@ class Renderer {
    */
   drawAnimatedBird(bird) {
     const ctx = this.ctx;
-    
+
     // Si está muriendo, usar colores más apagados
     const bodyColor = bird.isDying ? '#CCAA00' : '#FFD700';
     const beakColor = bird.isDying ? '#CC6600' : '#FF8C00';
     const wingColor = bird.isDying ? '#CC8800' : '#FFA500';
     const wingColor2 = bird.isDying ? '#AA6600' : '#FF8C00';
-    
+
     // Cuerpo del pajarito (círculo)
     ctx.fillStyle = bodyColor;
     ctx.beginPath();
     ctx.arc(0, 0, 12, 0, Math.PI * 2);
     ctx.fill();
-    
+
     // Ojo (cerrado si está muriendo)
     if (!bird.isDying) {
       ctx.fillStyle = '#000';
@@ -378,7 +375,7 @@ class Renderer {
       ctx.lineTo(8, -3);
       ctx.stroke();
     }
-    
+
     // Pico
     ctx.fillStyle = beakColor;
     ctx.beginPath();
@@ -387,11 +384,11 @@ class Renderer {
     ctx.lineTo(20, 3);
     ctx.closePath();
     ctx.fill();
-    
+
     // Animación de alas basada en wingPhase (solo si no está muriendo)
     if (!bird.isDying && bird.wingPhase !== undefined) {
       const wingAngle = Math.sin(bird.wingPhase || 0) * 0.5; // Movimiento de -0.5 a 0.5 radianes
-      
+
       // Ala izquierda (principal)
       ctx.save();
       ctx.translate(-5, 5);
@@ -401,7 +398,7 @@ class Renderer {
       ctx.ellipse(0, 0, 8, 5, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
-      
+
       // Ala derecha (más pequeña, efecto de profundidad)
       ctx.save();
       ctx.translate(-3, 6);
@@ -423,7 +420,7 @@ class Renderer {
       ctx.ellipse(0, 0, 8, 5, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
-      
+
       ctx.save();
       ctx.translate(-3, 6);
       ctx.rotate(0.4);
@@ -448,25 +445,25 @@ class Renderer {
     if (pipe.x + pipe.width < -50 || pipe.x > this.viewport.width + 50) {
       return;
     }
-    
+
     // Dibujar el tubo directamente con formas simples
     const ctx = this.ctx;
-    
+
     // Guardar el estado del contexto
     ctx.save();
-    
+
     // Efecto visual cuando la velocidad está activa
     if (speedBoostActive) {
       // Brillo naranja/amarillo para indicar velocidad
       const time = Date.now() * 0.005;
       const glowIntensity = 0.3 + Math.sin(time) * 0.2;
-      
+
       ctx.shadowBlur = 15;
       ctx.shadowColor = `rgba(255, 165, 0, ${glowIntensity})`;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
     }
-    
+
     // Tubo verde principal (con tinte naranja si velocidad activa)
     if (speedBoostActive) {
       ctx.fillStyle = '#32A852'; // Verde más brillante
@@ -474,12 +471,12 @@ class Renderer {
       ctx.fillStyle = '#228B22';
     }
     ctx.fillRect(pipe.x, pipe.y, pipe.width, pipe.height);
-    
+
     // Borde oscuro más grueso para darle textura
     ctx.strokeStyle = '#006400';
     ctx.lineWidth = 4;
     ctx.strokeRect(pipe.x, pipe.y, pipe.width, pipe.height);
-    
+
     // Borde interno más claro para dar profundidad (naranja si velocidad activa)
     if (speedBoostActive) {
       ctx.strokeStyle = '#FF8C00'; // Naranja para indicar velocidad
@@ -488,7 +485,7 @@ class Renderer {
     }
     ctx.lineWidth = 2;
     ctx.strokeRect(pipe.x + 2, pipe.y + 2, pipe.width - 4, pipe.height - 4);
-    
+
     // Restaurar el estado del contexto
     ctx.restore();
   }
