@@ -73,6 +73,267 @@
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
+        #abilityContainer {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            pointer-events: all;
+        }
+
+        #abilityButton {
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            min-width: 120px;
+        }
+
+        #abilityButton:hover:not(.cooldown):not(.active) {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        #abilityButton:active:not(.cooldown):not(.active) {
+            transform: scale(0.95);
+        }
+
+        #abilityButton.active {
+            background: #FFD700;
+            color: #000;
+            animation: pulse 1s infinite;
+        }
+
+        #abilityButton.cooldown {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            }
+            50% {
+                box-shadow: 0 4px 20px rgba(255, 215, 0, 0.8);
+            }
+        }
+
+        #abilityCooldown {
+            font-size: 14px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        #settingsButton {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            color: white;
+            transition: all 0.3s;
+            pointer-events: all;
+            z-index: 100;
+        }
+
+        #settingsButton:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(90deg);
+        }
+
+        #settingsPanel {
+            position: absolute;
+            top: 70px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 250px;
+            display: none;
+            pointer-events: all;
+            z-index: 100;
+            color: white;
+        }
+
+        #settingsPanel.visible {
+            display: block;
+        }
+
+        #settingsPanel h3 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+        }
+
+        .setting-item {
+            margin-bottom: 15px;
+        }
+
+        .setting-item label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .key-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            padding: 10px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .key-input:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .key-input.waiting {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: #FFD700;
+            animation: pulse 1s infinite;
+        }
+
+        .close-settings {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .close-settings:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #helpButton {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            padding: 5px 10px;
+            color: white;
+            font-size: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+
+        #helpButton:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        #helpModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            pointer-events: all;
+        }
+
+        #helpModal.visible {
+            display: flex;
+        }
+
+        #helpModalContent {
+            background: #2c3e50;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: white;
+            position: relative;
+        }
+
+        #helpModalContent h2 {
+            margin: 0 0 20px 0;
+            color: #FFD700;
+        }
+
+        #helpModalContent .close-help {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        #helpModalContent .close-help:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .keys-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .key-item {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .key-item.current {
+            background: rgba(255, 215, 0, 0.3);
+            border-color: #FFD700;
+        }
+
         #challengeNotification {
             position: absolute;
             top: 80px;
@@ -176,9 +437,35 @@
     <div id="gameContainer">
         <canvas id="gameCanvas"></canvas>
         <div id="ui">
+            <button id="settingsButton" title="Configuración">⚙️</button>
+            <div id="settingsPanel">
+                <button class="close-settings" id="closeSettings">×</button>
+                <h3>Configuración</h3>
+                <div class="setting-item">
+                    <label>Tecla para activar escudo:</label>
+                    <div class="key-input" id="abilityKeyInput">E</div>
+                    <small style="color: #aaa; font-size: 12px;">Haz clic y presiona una tecla</small>
+                    <button id="helpButton">Ver teclas disponibles</button>
+                </div>
+            </div>
+            <div id="helpModal">
+                <div id="helpModalContent">
+                    <button class="close-help" id="closeHelp">×</button>
+                    <h2>Teclas Disponibles</h2>
+                    <p>Puedes usar cualquiera de estas teclas para activar el escudo:</p>
+                    <div class="keys-grid" id="keysGrid"></div>
+                    <p style="margin-top: 20px; font-size: 12px; color: #aaa;">
+                        Nota: El espacio (ESPACIO) no está disponible ya que se usa para saltar.
+                    </p>
+                </div>
+            </div>
             <div id="score">0</div>
             <div id="highScore">Récord: 0</div>
             <div id="challengeNotification"></div>
+            <div id="abilityContainer">
+                <button id="abilityButton">Escudo (E)</button>
+                <div id="abilityCooldown"></div>
+            </div>
             <div id="startScreen">
                 <h1>Pajarito Saltador</h1>
                 <p>Toca, haz clic o presiona ESPACIO para saltar</p>

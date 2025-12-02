@@ -225,11 +225,49 @@ class Renderer {
   /**
    * Dibuja el pajarito
    * @param {Object} bird - Objeto pajarito {x, y, width, height, rotation}
+   * @param {boolean} invulnerable - Si el pájaro está invulnerable
    */
-  drawBird(bird) {
+  drawBird(bird, invulnerable = false) {
     this.ctx.save();
+    
     this.ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
     this.ctx.rotate(bird.rotation || 0);
+    
+    // Escudo dorado cuando está invulnerable (dibujar primero para que esté detrás)
+    if (invulnerable) {
+      // Círculo exterior brillante
+      const gradient = this.ctx.createRadialGradient(0, 0, 0, 0, 0, bird.width / 2 + 15);
+      gradient.addColorStop(0, 'rgba(255, 215, 0, 0.8)');
+      gradient.addColorStop(0.5, 'rgba(255, 215, 0, 0.4)');
+      gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+      
+      this.ctx.fillStyle = gradient;
+      this.ctx.beginPath();
+      this.ctx.arc(0, 0, bird.width / 2 + 15, 0, Math.PI * 2);
+      this.ctx.fill();
+      
+      // Borde dorado brillante
+      this.ctx.strokeStyle = '#FFD700';
+      this.ctx.lineWidth = 4;
+      this.ctx.shadowBlur = 10;
+      this.ctx.shadowColor = '#FFD700';
+      this.ctx.beginPath();
+      this.ctx.arc(0, 0, bird.width / 2 + 10, 0, Math.PI * 2);
+      this.ctx.stroke();
+      
+      // Segundo círculo interno
+      this.ctx.strokeStyle = '#FFA500';
+      this.ctx.lineWidth = 2;
+      this.ctx.shadowBlur = 5;
+      this.ctx.beginPath();
+      this.ctx.arc(0, 0, bird.width / 2 + 5, 0, Math.PI * 2);
+      this.ctx.stroke();
+      
+      // Resetear sombra
+      this.ctx.shadowBlur = 0;
+    }
+    
+    // Dibujar el pájaro
     this.ctx.drawImage(
       this.assets.bird,
       -bird.width / 2,
@@ -237,6 +275,7 @@ class Renderer {
       bird.width,
       bird.height
     );
+    
     this.ctx.restore();
   }
 
