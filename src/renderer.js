@@ -440,8 +440,9 @@ class Renderer {
   /**
    * Dibuja un tubo
    * @param {Object} pipe - Objeto tubo {x, y, width, height}
+   * @param {boolean} speedBoostActive - Si la habilidad de velocidad está activa
    */
-  drawPipe(pipe) {
+  drawPipe(pipe, speedBoostActive = false) {
     // Solo dibujar si el tubo está dentro o cerca del área visible
     // Evitar dibujar tubos que están muy fuera de pantalla
     if (pipe.x + pipe.width < -50 || pipe.x > this.viewport.width + 50) {
@@ -454,8 +455,24 @@ class Renderer {
     // Guardar el estado del contexto
     ctx.save();
     
-    // Tubo verde principal
-    ctx.fillStyle = '#228B22';
+    // Efecto visual cuando la velocidad está activa
+    if (speedBoostActive) {
+      // Brillo naranja/amarillo para indicar velocidad
+      const time = Date.now() * 0.005;
+      const glowIntensity = 0.3 + Math.sin(time) * 0.2;
+      
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = `rgba(255, 165, 0, ${glowIntensity})`;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+    }
+    
+    // Tubo verde principal (con tinte naranja si velocidad activa)
+    if (speedBoostActive) {
+      ctx.fillStyle = '#32A852'; // Verde más brillante
+    } else {
+      ctx.fillStyle = '#228B22';
+    }
     ctx.fillRect(pipe.x, pipe.y, pipe.width, pipe.height);
     
     // Borde oscuro más grueso para darle textura
@@ -463,8 +480,12 @@ class Renderer {
     ctx.lineWidth = 4;
     ctx.strokeRect(pipe.x, pipe.y, pipe.width, pipe.height);
     
-    // Borde interno más claro para dar profundidad
-    ctx.strokeStyle = '#32CD32';
+    // Borde interno más claro para dar profundidad (naranja si velocidad activa)
+    if (speedBoostActive) {
+      ctx.strokeStyle = '#FF8C00'; // Naranja para indicar velocidad
+    } else {
+      ctx.strokeStyle = '#32CD32';
+    }
     ctx.lineWidth = 2;
     ctx.strokeRect(pipe.x + 2, pipe.y + 2, pipe.width - 4, pipe.height - 4);
     
@@ -476,9 +497,9 @@ class Renderer {
    * Dibuja todos los tubos
    * @param {Array} pipes - Array de objetos tubo
    */
-  drawPipes(pipes) {
+  drawPipes(pipes, speedBoostActive = false) {
     pipes.forEach(pipe => {
-      this.drawPipe(pipe);
+      this.drawPipe(pipe, speedBoostActive);
     });
   }
 }

@@ -109,15 +109,6 @@
             user-select: none;
         }
 
-        /* Botón más grande en móvil */
-        @media (max-width: 768px) {
-            #abilityButton {
-                padding: 14px 28px;
-                font-size: 20px;
-                min-width: 160px;
-                border-width: 4px;
-            }
-        }
 
         #abilityButton:hover:not(.cooldown):not(.active) {
             background: #45a049;
@@ -170,6 +161,116 @@
         }
 
         #abilityCooldown {
+            font-size: 14px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        #speedBoostContainer {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            pointer-events: all;
+            z-index: 50;
+            transition: transform 0.1s ease-out;
+        }
+
+        #speedBoostContainer.dragging {
+            transition: none;
+            z-index: 100;
+        }
+
+        #speedBoostButton {
+            padding: 12px 24px;
+            font-size: 18px;
+            font-weight: bold;
+            background: #FF6B35;
+            color: white;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+            transition: all 0.2s;
+            min-width: 140px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        /* Botón más grande en móvil */
+        @media (max-width: 768px) {
+            #speedBoostButton {
+                padding: 16px 32px;
+                font-size: 22px;
+                min-width: 180px;
+                border-width: 4px;
+            }
+            
+            #abilityButton {
+                padding: 16px 32px;
+                font-size: 22px;
+                min-width: 180px;
+                border-width: 4px;
+            }
+            
+            #abilityContainer {
+                bottom: 15px;
+                left: 15px;
+            }
+            
+            #speedBoostContainer {
+                bottom: 15px;
+                right: 15px;
+            }
+        }
+
+        #speedBoostButton:hover:not(.cooldown):not(.active) {
+            background: #e55a2b;
+            transform: scale(1.05);
+        }
+
+        #speedBoostButton:active:not(.cooldown):not(.active) {
+            transform: scale(0.95);
+        }
+
+        /* Mejorar feedback táctil en móvil */
+        @media (hover: none) and (pointer: coarse) {
+            #speedBoostButton:active:not(.cooldown):not(.active) {
+                background: #d44a1f;
+                transform: scale(0.9);
+            }
+        }
+
+        #speedBoostButton.active {
+            background: #FFD700;
+            color: #000;
+            animation: pulse 1s infinite;
+        }
+
+        #speedBoostButton.cooldown {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        #speedBoostButton.move-mode {
+            cursor: move;
+            background: #2196F3;
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        #speedBoostButton.move-mode::after {
+            content: " (Mover)";
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        #speedBoostCooldown {
             font-size: 14px;
             color: white;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
@@ -591,6 +692,24 @@
                 min-width: calc(100vw - 30px);
                 max-width: 320px;
             }
+            
+            #abilityButton, #speedBoostButton {
+                padding: 18px 36px;
+                font-size: 24px;
+                min-width: 200px;
+            }
+            
+            #abilityContainer, #speedBoostContainer {
+                bottom: 8px;
+            }
+            
+            #abilityContainer {
+                left: 8px;
+            }
+            
+            #speedBoostContainer {
+                right: 8px;
+            }
         }
     </style>
 </head>
@@ -644,6 +763,10 @@
             <div id="abilityContainer">
                 <button id="abilityButton">Escudo (E)</button>
                 <div id="abilityCooldown"></div>
+            </div>
+            <div id="speedBoostContainer">
+                <button id="speedBoostButton">Velocidad (R)</button>
+                <div id="speedBoostCooldown"></div>
             </div>
             <div id="startScreen">
                 <h1>Pajarito Saltador</h1>

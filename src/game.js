@@ -66,6 +66,15 @@ class Game {
         cooldownTimer: 0,
         activeTimer: 0,
         key: this.loadAbilityKey() // Cargar tecla guardada o usar 'E' por defecto
+      },
+      speedBoost: {
+        active: false,
+        duration: 15, // segundos
+        cooldown: 5, // segundos
+        cooldownTimer: 0,
+        activeTimer: 0,
+        speedMultiplier: 1.5, // Multiplicador de velocidad
+        key: this.loadSpeedBoostKey() // Cargar tecla guardada o usar 'R' por defecto
       }
     };
     
@@ -127,7 +136,7 @@ class Game {
       this.startGame();
     });
     
-    // Botón de habilidad
+    // Botón de habilidad (escudo)
     const abilityButton = document.getElementById('abilityButton');
     
     abilityButton.addEventListener('click', (e) => {
@@ -140,6 +149,21 @@ class Game {
         this.activateInvulnerability();
       }
     });
+    
+    // Botón de habilidad (velocidad)
+    const speedBoostButton = document.getElementById('speedBoostButton');
+    if (speedBoostButton) {
+      speedBoostButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // No activar si está en modo mover
+        if (speedBoostButton.classList.contains('move-mode')) {
+          return;
+        }
+        if (this.state === 'playing') {
+          this.activateSpeedBoost();
+        }
+      });
+    }
     
     // Permitir iniciar el juego con espacio o clic en la pantalla de inicio
     document.getElementById('startScreen').addEventListener('click', (e) => {
@@ -156,12 +180,19 @@ class Game {
         this.startGame();
       }
       
-      // Activar habilidad con la tecla configurada
+      // Activar habilidades con las teclas configuradas
       if (this.state === 'playing') {
-        const abilityKey = this.abilities.invulnerability.key;
-        if (e.code === abilityKey || e.key.toLowerCase() === abilityKey.toLowerCase()) {
+        const invulnKey = this.abilities.invulnerability.key;
+        const speedKey = this.abilities.speedBoost.key;
+        
+        if (e.code === invulnKey || e.key.toLowerCase() === invulnKey.toLowerCase()) {
           e.preventDefault();
           this.activateInvulnerability();
+        }
+        
+        if (e.code === speedKey || e.key.toLowerCase() === speedKey.toLowerCase()) {
+          e.preventDefault();
+          this.activateSpeedBoost();
         }
       }
     });
@@ -282,9 +313,15 @@ class Game {
    * @param {number} deltaTime - Tiempo transcurrido
    */
   updatePipes(deltaTime) {
+    // Calcular velocidad actual (con boost si está activo)
+    let currentSpeed = this.pipeSpeed;
+    if (this.abilities.speedBoost.active) {
+      currentSpeed = this.pipeSpeed * this.abilities.speedBoost.speedMultiplier;
+    }
+    
     // Mover tubos
     this.pipes.forEach(pipe => {
-      pipe.x -= this.pipeSpeed * deltaTime;
+      pipe.x -= currentSpeed * deltaTime;
     });
     
     // Eliminar tubos fuera de pantalla (más estricto para evitar artefactos visuales)
@@ -377,27 +414,45 @@ class Game {
    * @param {number} deltaTime - Tiempo transcurrido
    */
   updateAbilities(deltaTime) {
-    const ability = this.abilities.invulnerability;
+    // Actualizar invulnerabilidad
+    const invulnAbility = this.abilities.invulnerability;
     
-    // Actualizar cooldown
-    if (ability.cooldownTimer > 0) {
-      ability.cooldownTimer -= deltaTime;
-      if (ability.cooldownTimer < 0) {
-        ability.cooldownTimer = 0;
+    if (invulnAbility.cooldownTimer > 0) {
+      invulnAbility.cooldownTimer -= deltaTime;
+      if (invulnAbility.cooldownTimer < 0) {
+        invulnAbility.cooldownTimer = 0;
       }
     }
     
-    // Actualizar duración de habilidad activa
-    if (ability.active) {
-      ability.activeTimer -= deltaTime;
-      if (ability.activeTimer <= 0) {
-        ability.active = false;
-        ability.activeTimer = 0;
+    if (invulnAbility.active) {
+      invulnAbility.activeTimer -= deltaTime;
+      if (invulnAbility.activeTimer <= 0) {
+        invulnAbility.active = false;
+        invulnAbility.activeTimer = 0;
+      }
+    }
+    
+    // Actualizar velocidad
+    const speedAbility = this.abilities.speedBoost;
+    
+    if (speedAbility.cooldownTimer > 0) {
+      speedAbility.cooldownTimer -= deltaTime;
+      if (speedAbility.cooldownTimer < 0) {
+        speedAbility.cooldownTimer = 0;
+      }
+    }
+    
+    if (speedAbility.active) {
+      speedAbility.activeTimer -= deltaTime;
+      if (speedAbility.activeTimer <= 0) {
+        speedAbility.active = false;
+        speedAbility.activeTimer = 0;
       }
     }
     
     // Actualizar UI
     this.updateAbilityUI();
+    this.updateSpeedBoostUI();
   }
 
   /**
@@ -417,6 +472,26 @@ class Game {
     ability.cooldownTimer = ability.cooldown;
     
     this.updateAbilityUI();
+    return true;
+  }
+
+  /**
+   * Activa la habilidad de velocidad
+   */
+  activateSpeedBoost() {
+    const ability = this.abilities.speedBoost;
+    
+    // Verificar si está en cooldown
+    if (ability.cooldownTimer > 0) {
+      return false;
+    }
+    
+    // Activar habilidad
+    ability.active = true;
+    ability.activeTimer = ability.duration;
+    ability.cooldownTimer = ability.cooldown;
+    
+    this.updateSpeedBoostUI();
     return true;
   }
 
@@ -464,12 +539,62 @@ class Game {
   }
 
   /**
+   * Actualiza la UI de la habilidad de velocidad
+   */
+  updateSpeedBoostUI() {
+    const ability = this.abilities.speedBoost;
+    const speedBoostButton = document.getElementById('speedBoostButton');
+    const speedBoostCooldown = document.getElementById('speedBoostCooldown');
+    
+    if (!speedBoostButton) {
+      return; // Botón no existe aún, no es error
+    }
+    
+    if (!speedBoostCooldown) {
+      return;
+    }
+    
+    // Limpiar clases anteriores
+    speedBoostButton.classList.remove('active', 'cooldown');
+    
+    if (ability.active) {
+      speedBoostButton.classList.add('active');
+      speedBoostButton.textContent = 'Velocidad Activa';
+      const remaining = Math.ceil(ability.activeTimer);
+      speedBoostCooldown.textContent = `${remaining}s`;
+      speedBoostCooldown.style.display = 'block';
+      speedBoostButton.disabled = true;
+    } else if (ability.cooldownTimer > 0) {
+      speedBoostButton.classList.add('cooldown');
+      speedBoostButton.textContent = 'En Cooldown';
+      const remaining = Math.ceil(ability.cooldownTimer);
+      speedBoostCooldown.textContent = `${remaining}s`;
+      speedBoostCooldown.style.display = 'block';
+      speedBoostButton.disabled = true;
+    } else {
+      const keyName = this.getKeyDisplayName(this.abilities.speedBoost.key);
+      speedBoostButton.textContent = `Velocidad (${keyName})`;
+      speedBoostCooldown.style.display = 'none';
+      speedBoostButton.disabled = false;
+    }
+  }
+
+  /**
    * Carga la tecla de habilidad guardada
    * @returns {string} - Código de tecla
    */
   loadAbilityKey() {
     const saved = localStorage.getItem('abilityKey');
     return saved || 'KeyE'; // Por defecto 'E'
+  }
+
+  /**
+   * Carga la tecla de velocidad guardada
+   * @returns {string} - Código de tecla
+   */
+  loadSpeedBoostKey() {
+    const saved = localStorage.getItem('speedBoostKey');
+    return saved || 'KeyR'; // Por defecto 'R'
   }
 
   /**
@@ -480,6 +605,16 @@ class Game {
     localStorage.setItem('abilityKey', keyCode);
     this.abilities.invulnerability.key = keyCode;
     this.updateAbilityUI();
+  }
+
+  /**
+   * Guarda la tecla de velocidad
+   * @param {string} keyCode - Código de tecla
+   */
+  saveSpeedBoostKey(keyCode) {
+    localStorage.setItem('speedBoostKey', keyCode);
+    this.abilities.speedBoost.key = keyCode;
+    this.updateSpeedBoostUI();
   }
 
   /**
@@ -861,6 +996,10 @@ class Game {
     this.abilities.invulnerability.activeTimer = 0;
     this.abilities.invulnerability.cooldownTimer = 0;
     
+    this.abilities.speedBoost.active = false;
+    this.abilities.speedBoost.activeTimer = 0;
+    this.abilities.speedBoost.cooldownTimer = 0;
+    
     this.bird.x = 100;
     this.bird.y = 250;
     this.bird.velocity = 0;
@@ -876,16 +1015,22 @@ class Game {
     document.getElementById('gameOverScreen').style.display = 'none';
     document.getElementById('challengeNotification').style.display = 'none';
     
-    // Mostrar contenedor de habilidades
+    // Mostrar contenedores de habilidades
     const abilityContainer = document.getElementById('abilityContainer');
     if (abilityContainer) {
       abilityContainer.style.display = 'flex';
+    }
+    
+    const speedBoostContainer = document.getElementById('speedBoostContainer');
+    if (speedBoostContainer) {
+      speedBoostContainer.style.display = 'flex';
     }
     
     this.updateScoreDisplay();
     
     // Inicializar UI de habilidades
     this.updateAbilityUI();
+    this.updateSpeedBoostUI();
     
     // Reproducir música de fondo
     this.playBackgroundMusic();
@@ -955,7 +1100,7 @@ class Game {
     this.renderer.drawBackground();
     
     if (this.state === 'playing' || this.state === 'gameover') {
-      this.renderer.drawPipes(this.pipes);
+      this.renderer.drawPipes(this.pipes, this.abilities.speedBoost.active);
       this.renderer.drawBird(this.bird, this.abilities.invulnerability.active);
     }
   }
