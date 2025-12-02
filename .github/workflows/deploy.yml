@@ -66,7 +66,7 @@ jobs:
         run: |
           echo "Running ESLint..."
           npm run lint || {
-            echo "❌ ESLint found errors. Run 'npm run lint:fix' to auto-fix some issues."
+            echo " ESLint found errors. Run 'npm run lint:fix' to auto-fix some issues."
             exit 1
           }
           echo "✓ ESLint passed!"
@@ -172,12 +172,12 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          echo "🚀 Iniciando deployment a Vercel..."
+          echo " Iniciando deployment a Vercel..."
           set -e  # Salir si hay errores
           
           # Capturar output completo
           DEPLOY_OUTPUT=$(vercel --prod --yes --token=$VERCEL_TOKEN 2>&1) || {
-            echo "❌ Error en deployment"
+            echo " Error en deployment"
             echo "$DEPLOY_OUTPUT"
             exit 1
           }
@@ -219,11 +219,11 @@ jobs:
           fi
           
           if [ -n "$DEPLOY_URL" ]; then
-            echo "✅ Deployment exitoso: $DEPLOY_URL"
+            echo " Deployment exitoso: $DEPLOY_URL"
             echo "deploy_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
             echo "DEPLOY_URL=$DEPLOY_URL" >> $GITHUB_ENV
           else
-            echo "⚠️ No se pudo determinar la URL del deployment"
+            echo " No se pudo determinar la URL del deployment"
             echo "El deployment puede haber sido exitoso, pero no se pudo extraer la URL"
             echo "Revisa el output anterior o el dashboard de Vercel"
             # No fallar el workflow, pero marcar como advertencia
@@ -233,23 +233,20 @@ jobs:
       - name: Register deployment in GitHub
         if: |
           (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') &&
-          github.event_name != 'pull_request' &&
-          steps.vercel.outputs.deploy_url != ''
-        env:
-          DEPLOY_URL: ${{ steps.vercel.outputs.deploy_url }}
+          github.event_name != 'pull_request'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const core = require('@actions/core');
-            const url = process.env.DEPLOY_URL || '${{ steps.vercel.outputs.deploy_url }}';
             
-            console.log('Attempting to register deployment with URL:', url);
+            // Obtener URL del step anterior
+            const url = '${{ steps.vercel.outputs.deploy_url }}' || 'https://pajarito-saltador.vercel.app';
             
-            if (!url || url.trim() === '') {
-              core.warning('Deploy URL not found, skipping deployment registration');
-              return;
-            }
+            console.log('Attempting to register deployment...');
+            console.log('Deploy URL:', url);
+            console.log('SHA:', context.sha);
+            console.log('Ref:', context.ref);
             
             try {
               console.log('Creating deployment...');
@@ -278,15 +275,21 @@ jobs:
                 log_url: url
               });
               
-              console.log(`✅ Deployment registered successfully: ${url}`);
+              console.log(` Deployment registered successfully: ${url}`);
               console.log('Deployment status:', status.data.state);
+              core.setOutput('deployment_id', deployment.data.id);
             } catch (error) {
-              console.error('❌ Error registering deployment:', error);
-              console.error('Error details:', JSON.stringify(error, null, 2));
+              console.error(' Error registering deployment:', error);
+              console.error('Error message:', error.message);
+              console.error('Error status:', error.status);
               
-              // Si es un error de permisos, informar al usuario
-              if (error.status === 403 || error.status === 404) {
-                core.warning('Permission error. Make sure the GITHUB_TOKEN has deployment permissions.');
+              if (error.status === 403) {
+                core.warning('Permission error (403). Make sure the GITHUB_TOKEN has deployment permissions.');
+                core.warning('Go to Settings → Actions → General → Workflow permissions and enable "Read and write permissions"');
+              } else if (error.status === 404) {
+                core.warning('Not found error (404). Repository may not have deployment access enabled.');
+              } else {
+                core.warning(`Error ${error.status}: ${error.message}`);
               }
               
               // No fallar el workflow si el registro falla

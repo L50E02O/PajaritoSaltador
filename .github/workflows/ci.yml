@@ -41,7 +41,7 @@ jobs:
         run: |
           echo "Running ESLint..."
           npm run lint || {
-            echo "❌ ESLint found errors. Run 'npm run lint:fix' to auto-fix some issues."
+            echo " ESLint found errors. Run 'npm run lint:fix' to auto-fix some issues."
             exit 1
           }
           echo "✓ ESLint passed!"
